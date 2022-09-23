@@ -7,6 +7,7 @@ import axios from 'axios'
 Vue.config.productionTip = false
 
 Vue.prototype.$axios = axios;
+Vue.prototype.$backendUrl = 'http://127.0.0.1:8000/api/'
 new Vue({
   vuetify,
   router,

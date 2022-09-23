@@ -1,8 +1,8 @@
 <template>
     <v-app>
-        <v-row justify="center">
-            <v-col md="4">
-                <v-card class="elevation-12">
+        <v-row justify="center" align="center">
+            <v-col md="5">
+                <v-card class="elevation-6">
                     <v-card-title>Login form</v-card-title>
                     <v-card-text>
                         <v-form>
@@ -45,7 +45,7 @@ export default {
     methods: {
         async loginSubmit() {
             await this.$axios
-            .post('http://127.0.0.1:8000/api/user/auth/login', {
+            .post(`${this.$backendUrl}user/auth/login`, {
                 email: this.email,
                 password: this.password
             })
@@ -55,7 +55,7 @@ export default {
                     let user_info = res.data.user;
 
                     sessionStorage.setItem("access_token", access_token);
-                    sessionStorage.setItem("user_info", user_info);
+                    sessionStorage.setItem("user_info", JSON.stringify(user_info));
                     this.$router.push('home') 
                 }
             })
@@ -64,6 +64,9 @@ export default {
             })
         }
     },
+    mounted() {
+        if(sessionStorage.getItem("access_token") !== null) this.$router.push('home') 
+    }
 };
 </script>
 

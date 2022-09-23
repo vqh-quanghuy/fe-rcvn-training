@@ -1,21 +1,14 @@
 <template>
   <div id="app">
-    <v-container>
-      <router-view/>
-    </v-container>
+    <router-view/>
   </div>
 </template>
 <script>
 export default {
-  methods: {
-    load() {
-      if(sessionStorage.getItem("access_token") === null && this.currentRouteName !== 'login') {
-        this.$router.push('login') 
-      }
-    }
-  },
   mounted() {
-    this.load();
+    if(sessionStorage.getItem("access_token") === null && this.currentRouteName !== 'login') {
+      this.$router.push('login') 
+    }
   },
   computed: {
     currentRouteName() {
