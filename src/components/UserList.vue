@@ -209,7 +209,10 @@
                     outlined
                     hide-details
                     dense
-                    @input="page = parseInt($event, 10)"
+                    min=1
+                    :max="users.last_page"
+                    @input="page = parseInt($event, 10); 
+                            page = (page > users.last_page) ? users.last_page : (page < 1) ? 1 : page"
                 ></v-text-field>
             </v-col>
         </v-row>
