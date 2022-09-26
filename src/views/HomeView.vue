@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-container>
-      <v-app-bar color="primary" dark absolute elevate-on-scroll height="50px">
+      <v-app-bar color="primary" dark absolute elevate-on-scroll>
         <v-toolbar-title>Coding Beauty</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-toolbar-title>{{ userName }}</v-toolbar-title>
@@ -13,23 +13,23 @@
           </template>
         </v-menu>
         <template v-slot:extension>
-          <v-tabs v-model="tab" align-with-title>
+          <v-tabs v-model="tab" align-with-title show-arrows >
             <v-tabs-slider color="yellow"></v-tabs-slider>
-            <v-tab href="#tab-1"> Users </v-tab>
-            <v-tab href="#tab-2"> Customers </v-tab>
-            <v-tab href="#tab-3"> Products </v-tab>
+            <v-tab href="#tab-1"> Sản phẩm </v-tab>
+            <v-tab href="#tab-2"> Khách hàng </v-tab>
+            <v-tab href="#tab-3"> Users </v-tab>
           </v-tabs>
         </template>
       </v-app-bar>
-      <v-tabs-items v-model="tab" class="my-2">
+      <v-tabs-items v-model="tab" style="margin-top: 100px">
         <v-tab-item value="tab-1">
-          <UserList />
+          <ProductList />
         </v-tab-item>
         <v-tab-item value="tab-2">
           <CustomerList />
         </v-tab-item>
         <v-tab-item value="tab-3">
-          <ProductList />
+          <UserList />
         </v-tab-item>
       </v-tabs-items>
     </v-container>

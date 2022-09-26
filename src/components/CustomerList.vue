@@ -10,13 +10,13 @@
     >
       <template v-slot:top>
         <v-toolbar flat>
-          <v-toolbar-title>List of Customers</v-toolbar-title>
+          <v-toolbar-title>Danh sách khách hàng</v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-spacer></v-spacer>
           <v-dialog v-model="dialog" max-width="600px">
             <template v-slot:activator="{ on, attrs }">
               <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
-                Add Customer
+                Thêm mới
               </v-btn>
             </template>
             <v-card>
@@ -31,7 +31,7 @@
                       <v-col cols="12" sm="6" md="6">
                         <v-text-field
                           v-model="editedItem.customer_name"
-                          label="Customer Name"
+                          label="Tên"
                           validate-on-blur
                           :rules="customerNameRules"
                           :error-messages="editedItemErrors.customer_name"
@@ -85,26 +85,26 @@
                       </template>
                       <v-col cols="12" sm="12" md="12">
                         <v-text-field
-                          v-model="editedItem.address"
-                          label="Address"
-                          validate-on-blur
-                          :rules="addressRules"
-                          :error-messages="editedItemErrors.address"
-                        ></v-text-field>
-                      </v-col>
-                      <v-col cols="12" sm="12" md="12">
-                        <v-text-field
                           v-model="editedItem.tel_num"
-                          label="Telephone number"
+                          label="Điện thoại"
                           validate-on-blur
                           :rules="telNumRules"
                           :error-messages="editedItemErrors.tel_num"
                         ></v-text-field>
                       </v-col>
+                      <v-col cols="12" sm="12" md="12">
+                        <v-text-field
+                          v-model="editedItem.address"
+                          label="Địa chỉ"
+                          validate-on-blur
+                          :rules="addressRules"
+                          :error-messages="editedItemErrors.address"
+                        ></v-text-field>
+                      </v-col>
                       <v-col cols="12" sm="6" md="6">
                         <v-checkbox
                           v-model="editedItem.is_active"
-                          label="Active User"
+                          label="Trạng thái"
                           :error-messages="editedItemErrors.is_active"
                         ></v-checkbox>
                       </v-col>
@@ -115,8 +115,8 @@
 
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="secondary" text @click="close">Cancel</v-btn>
-                <v-btn color="primary" text @click="save">Save</v-btn>
+                <v-btn color="secondary" text @click="close">Hủy</v-btn>
+                <v-btn color="primary" text @click="save">Lưu</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -126,25 +126,27 @@
         <v-icon medium class="mx-1" color="accent" @click="editItem(item)">mdi-pencil</v-icon>
       </template>
       <template v-slot:no-data>
-        <v-btn color="primary" @click="load"> Reset </v-btn>
+        <v-btn color="primary" @click="load"> Tải lại </v-btn>
       </template>
       <template v-slot:[`item.index`]="{ index }">
         {{ index + 1 }}
       </template>
       <template v-slot:[`item.is_active`]="{ item }">
         <v-chip v-if="item.is_active === 1" color="green">
-          <b>Active</b>
+          <b>Hoạt động</b>
         </v-chip>
         <v-chip v-else color="red">
-          <b>In-active</b>
+          <b>Đã khóa</b>
         </v-chip>
       </template>
     </v-data-table>
-    <v-row class="text-center px-4 align-center" wrap>
-      <v-col class="text-truncate" cols="12" md="2">
-        Total {{ customers.total }} records
+    <v-row class="text-center pt-4 align-center" wrap>
+      <v-col class="text-truncate" cols="12" md="12">
+        Hiển thị từ {{customers.from}} ~ {{customers.to}} trên tổng số {{ customers.total }} khách hàng
       </v-col>
-      <v-col cols="12" md="5">
+    </v-row>
+    <v-row class="text-center px-4 align-center" wrap>
+      <v-col cols="12" md="7">
         <v-pagination v-model="page" :length="customers.last_page">
         </v-pagination>
       </v-col>
@@ -154,7 +156,7 @@
           outlined
           hide-details
           :value="itemsPerPage"
-          label="Items per page"
+          label="Số lượng hiển thị mỗi trang"
           @change="itemsPerPage = parseInt($event, 10)"
           :items="perPageChoices"
         >
@@ -163,7 +165,7 @@
       <v-col cols="6" md="2">
         <v-text-field
           v-model="page"
-          label="Go to page"
+          label="Đi tới trang"
           type="number"
           outlined
           hide-details
@@ -186,19 +188,19 @@ export default {
       dialog: false,
       headers: [
         { text: "#", value: "index" },
-        { text: "Name", align: "start", value: "customer_name", width: "20%" },
+        { text: "Họ tên", align: "start", value: "customer_name", width: "20%" },
         { text: "Email", value: "email", width: "20%" },
-        { text: "Address", value: "address", width: "20%" },
-        { text: "Tel.", value: "tel_num" },
-        { text: "Status", value: "is_active", align: "center" },
-        { text: "Actions", value: "actions", align: "center" },
+        { text: "Địa chỉ", value: "address", width: "20%" },
+        { text: "Điện thoại", value: "tel_num" },
+        { text: "Tình trạng", value: "is_active", align: "center" },
+        { text: "Hành động", value: "actions", align: "center" },
       ],
       page: 1,
       itemsPerPage: 10,
       perPageChoices: [
-        { text: "5 records/page", value: 5 },
-        { text: "10 records/page", value: 10 },
-        { text: "20 records/page", value: 20 },
+        { text: "5 khách hàng/ trang", value: 5 },
+        { text: "10 khách hàng/ trang", value: 10 },
+        { text: "20 khách hàng/ trang", value: 20 },
       ],
       editedIndex: -1,
       showPassword: false,
@@ -211,7 +213,7 @@ export default {
         address: "",
         tel_num: "",
         customer_id: "",
-        is_active: true, //True: 1 => Active,  False: 0 => Inactive
+        is_active: false, //True: 1 => Active,  False: 0 => Inactive
       },
       defaultItem: {
         customer_name: "",
@@ -221,7 +223,7 @@ export default {
         address: "",
         tel_num: "",
         customer_id: "",
-        is_active: true, //True: 1 => Active,  False: 0 => Inactive
+        is_active: false, //True: 1 => Active,  False: 0 => Inactive
       },
       editedItemErrors: {
         customer_name: [],
@@ -235,42 +237,42 @@ export default {
 
       // Validation rule
       customerNameRules: [
-        (v) => !!v || "Name is required.",
-        (v) =>
-          (v && v.length <= 255) || "Name must be less than 255 characters.",
+        (v) => !!v || "Vui lòng nhập tên khách hàng.",
+        (v) => (v && v.length <= 255) || "Tên khách hàng phải ít hơn 255 ký tự.",
+        (v) => (v && v.length >= 5) || "Tên khách hàng phải lớn hơn 5 ký tự.",
       ],
       emailRules: [
-        (v) => !!v || "Email is required.",
+        (v) => !!v || "Email không được để trống.",
         (v) =>
           (v && v.length <= 255) || "Email must be less than 255 characters.",
         (v) =>
           /^(([^<>()[\]\\.,;:\s@']+(\.[^<>()\\[\]\\.,;:\s@']+)*)|('.+'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
             v
-          ) || "E-mail must be valid.",
+          ) || "E-mail không đúng định dạng.",
       ],
       passwordRules: [
-        (v) => !!v || "Password is required.",
+        (v) => !!v || "Nhập mật khẩu.",
         (v) =>
-          (v && v.length >= 8) || "Password must be more than 8 characters.",
+          (v && v.length >= 8) || "Mật khẩu phải lớn hơn 8 ký tự.",
       ],
       passwordConfirmRules: [
-        (v) => !!v || "Password Confirm is required",
+        (v) => !!v || "Xác nhận mật khẩu",
         (v) =>
-          (v && v.length >= 8) || "Password must be more than 8 characters.",
+          (v && v.length >= 8) || "Mật khẩu xác nhận phải lớn hơn 8 ký tự.",
         (v) =>
-          v === this.editedItem.password || "Password confirm must be match.",
+          v === this.editedItem.password || "Xác nhận mật khẩu không khớp.",
       ],
       addressRules: [
-        (v) => !!v || "Address is required",
+        (v) => !!v || "Địa chỉ không được để trống",
         (v) =>
           (v && v.length <= 255) ||
-          "Password must be less than 255 characters.",
+          "Địa chỉ phải ít hơn 255 ký tự.",
       ],
       telNumRules: [
-        (v) => !!v || "Tel Number is required",
+        (v) => !!v || "Điện thoại không được để trống",
         (v) =>
           (v && v.length <= 14) ||
-          "Tel Number must be less than 14 characters.",
+          "Số điện thoại phải ít hơn 14 số.",
       ],
 
       apiHeaders: {
@@ -309,6 +311,7 @@ export default {
     close() {
       this.editedItemErrors = {};
       this.$refs.editedForm.reset();
+      this.editedIndex = -1;
       this.dialog = false;
     },
 
@@ -376,7 +379,7 @@ export default {
   },
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? "New Item" : "Edit Item";
+      return this.editedIndex === -1 ? "Thêm khách hàng" : "Chỉnh sửa khách hàng";
     },
   },
 

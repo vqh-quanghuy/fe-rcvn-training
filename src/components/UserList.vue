@@ -105,6 +105,7 @@
                                     <v-col cols="12" sm="6" md="6">
                                         <v-checkbox
                                             v-model="editedItem.is_active"
+                                            input-value="true"
                                             label="Active User"
                                             :error-messages="editedItemErrors.is_active"
                                         ></v-checkbox>
@@ -253,7 +254,7 @@ export default {
                 password_confirmation: '',
                 group_role: '',
                 id: '',
-                is_active: true, //True: 1 => Active,  False: 0 => Inactive
+                is_active: false, //True: 1 => Active,  False: 0 => Inactive
             },
             defaultItem: {
                 name: '',
@@ -262,7 +263,7 @@ export default {
                 password_confirmation: '',
                 group_role: '',
                 id: '',
-                is_active: true, //True: 1 => Active,  False: 0 => Inactive
+                is_active: false, //True: 1 => Active,  False: 0 => Inactive
             },
             editedItemErrors: {
                 name: [],
