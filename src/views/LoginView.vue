@@ -3,23 +3,45 @@
         <v-row justify="center" align="center">
             <v-col md="5">
                 <v-card class="elevation-6">
+                    <v-row justify="center" class="pt-2 px-2">
+                        <v-img src="RiverCrane-Vietnam-Logo.png" max-width="220px"></v-img>
+                    </v-row>
                     <v-card-title>Login form</v-card-title>
+                    <v-alert
+                        class="mx-2 error--text"
+                        v-model="alert"
+                        dismissible
+                        color="error"
+                        border="left"
+                        elevation="1"
+                        colored-border
+                        icon="mdi-alert-outline"
+                        @input="closeAlert()"
+                    >
+                        <b>{{alertMesg}}</b>
+                    </v-alert>
                     <v-card-text>
-                        <v-form>
+                        <v-form ref="loginForm">
                             <v-text-field
                                 v-model="email"
                                 prepend-icon="mdi-account-circle"
                                 name="email"
                                 label="Email"
                                 type="text"
+                                validate-on-blur
+                                :rules="emailRules"
                             ></v-text-field>
                             <v-text-field
+                                :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                                @click:append="showPassword = !showPassword"
                                 v-model="password"
                                 id="password"
                                 prepend-icon="mdi-lock"
                                 name="password"
                                 label="Password"
-                                type="password"
+                                :type="showPassword ? 'text' : 'password'"
+                                validate-on-blur
+                                :rules="passwordRules"
                             ></v-text-field>
                         </v-form>
                     </v-card-text>
@@ -40,10 +62,23 @@ export default {
         return {
             email: '',
             password: '',
+            showPassword: false,
+            emailRules: [
+                v => !!v || 'Email không được để trống.',
+                v => (v && v.length <= 255) || 'Email phải ít hơn 255 ký tự.',
+                v => /^(([^<>()[\]\\.,;:\s@']+(\.[^<>()\\[\]\\.,;:\s@']+)*)|('.+'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(v) || 'Email không đúng định dạng.',
+            ], 
+            passwordRules: [
+                v => !!v || 'Mật khẩu không được để trống.',
+                v => (v && v.length >= 8) || 'Mật khẩu phải lớn hơn 8 ký tự.',
+            ],
+            alert: false,
+            alertMesg: ''
         }
     },
     methods: {
         async loginSubmit() {
+            if(!this.$refs.loginForm.validate()) return;
             await this.$axios
             .post(`${this.$backendUrl}user/auth/login`, {
                 email: this.email,
@@ -60,8 +95,13 @@ export default {
                 }
             })
             .catch(err => {
-                if (err.status === 422) console.error(err.response.data.message);
+                this.alert = true;
+                this.alertMesg = err.response.data.message;
             })
+        },
+        closeAlert() {
+            this.alert = false;
+            this.alertMesg = '';
         }
     },
     mounted() {

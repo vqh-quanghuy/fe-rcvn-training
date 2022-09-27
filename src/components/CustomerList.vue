@@ -1,10 +1,45 @@
 <template>
   <div>
+    <v-form ref="searchForm">
+      <v-row>
+        <v-col cols="6" sm="6" md="3" >
+          <v-text-field
+            v-model="searchItem.customer_name"
+            label="Họ và tên"
+          ></v-text-field>
+        </v-col>
+        <v-col cols="6" sm="6" md="3" >
+          <v-text-field
+            v-model="searchItem.customer_email"
+            label="Email"
+          ></v-text-field>
+        </v-col>
+        <v-col cols="6" sm="6" md="3" >
+          <v-select
+            :items="customerStatus"
+            item-value="id"
+            item-text="text"
+            v-model="searchItem.customer_status"
+            label="Trạng thái"
+          ></v-select>
+        </v-col>
+        <v-col cols="6" sm="6" md="3" >
+          <v-text-field
+            v-model="searchItem.customer_address"
+            label="Địa chỉ"
+          ></v-text-field>
+        </v-col>
+      </v-row>
+      <v-row class="flex-row-reverse">
+        <v-btn @click="clearSearch()" small color="secondary" class="mr-4">Xóa tìm</v-btn>
+        <v-btn @click="load()" small color="info" class="mr-4">Tìm kiếm</v-btn>
+      </v-row>
+    </v-form>
     <v-data-table
       :headers="headers"
       :items="customers.data"
       disable-sort
-      class="elevation-2"
+      class="elevation-2 mt-6"
       hide-default-footer
       disable-pagination
     >
@@ -23,7 +58,19 @@
               <v-card-title>
                 <span class="text-h5">{{ formTitle }}</span>
               </v-card-title>
-
+              <v-alert
+                class="mx-2 error--text"
+                v-model="alert"
+                dismissible
+                color="error"
+                border="left"
+                elevation="1"
+                colored-border
+                icon="mdi-alert-outline"
+                @input="closeAlert()"
+              >
+                <b>{{alertMesg}}</b>
+              </v-alert>
               <v-card-text>
                 <v-container>
                   <v-form ref="editedForm">
@@ -131,14 +178,14 @@
       <template v-slot:[`item.index`]="{ index }">
         {{ index + 1 }}
       </template>
-      <template v-slot:[`item.is_active`]="{ item }">
+      <!-- <template v-slot:[`item.is_active`]="{ item }">
         <v-chip v-if="item.is_active === 1" color="green">
           <b>Hoạt động</b>
         </v-chip>
         <v-chip v-else color="red">
           <b>Đã khóa</b>
         </v-chip>
-      </template>
+      </template> -->
     </v-data-table>
     <v-row class="text-center pt-4 align-center" wrap>
       <v-col class="text-truncate" cols="12" md="12">
@@ -186,14 +233,17 @@ export default {
     return {
       customers: {},
       dialog: false,
+      alert: false,
+      alertMesg: '',
+      alertType: '',
       headers: [
-        { text: "#", value: "index" },
+        { text: "#", value: "index", width: "5%" },
         { text: "Họ tên", align: "start", value: "customer_name", width: "20%" },
         { text: "Email", value: "email", width: "20%" },
-        { text: "Địa chỉ", value: "address", width: "20%" },
-        { text: "Điện thoại", value: "tel_num" },
-        { text: "Tình trạng", value: "is_active", align: "center" },
-        { text: "Hành động", value: "actions", align: "center" },
+        { text: "Địa chỉ", value: "address", width: "40%" },
+        { text: "Điện thoại", value: "tel_num", width: "20%" },
+        // { text: "Tình trạng", value: "is_active", align: "center" },
+        { text: "Hành động", value: "actions", align: "center", width: "20%" },
       ],
       page: 1,
       itemsPerPage: 10,
@@ -235,6 +285,17 @@ export default {
         is_active: [],
       },
 
+      searchItem: {
+        customer_name: '',
+        customer_email: '',
+        customer_status: '',
+        customer_address: '',
+      },
+
+      customerStatus: [
+        { id: 0, text: "Đã khóa" },
+        { id: 1, text: "Hoạt động" },
+      ],
       // Validation rule
       customerNameRules: [
         (v) => !!v || "Vui lòng nhập tên khách hàng.",
@@ -283,13 +344,17 @@ export default {
     };
   },
   methods: {
-    async load(page, itemsPerPage) {
+    async load(page = 1, itemsPerPage = 10) {
       await this.$axios
         .get(`${this.$backendUrl}user/customers/`, {
           headers: this.apiHeaders,
           params: {
             page: page,
             per_page: itemsPerPage,
+            name: this.searchItem.customer_name,
+            email: this.searchItem.customer_email,
+            customer_status: this.searchItem.customer_status,
+            address: this.searchItem.customer_address,
           },
         })
         .then((res) => {
@@ -302,6 +367,12 @@ export default {
           if (err.status !== 200) console.error(err.response.data.message);
         });
     },
+
+    clearSearch() {
+      this.$refs.searchForm.reset();
+      this.load();
+    },
+
     editItem(item) {
       this.editedIndex = 1;
       this.editedItem = Object.assign({}, item);
@@ -312,6 +383,9 @@ export default {
       this.editedItemErrors = {};
       this.$refs.editedForm.reset();
       this.editedIndex = -1;
+      this.alert = false;
+      this.alertMesg = '';
+      this.alertType = '';
       this.dialog = false;
     },
 
@@ -342,7 +416,9 @@ export default {
           })
           .catch((err) => {
             this.editedItemErrors = err.response.data.error;
-            alert(err.response.data.message);
+            this.alertMesg = err.response.data.message;
+            this.alert = true;
+            this.alertType = 'error';
           });
       } else {
         // Call to Create axios
@@ -369,7 +445,9 @@ export default {
           })
           .catch((err) => {
             this.editedItemErrors = err.response.data.error;
-            alert(err.response.data.message);
+            this.alertMesg = err.response.data.message;
+            this.alert = true;
+            this.alertType = 'error';
           });
       }
     },

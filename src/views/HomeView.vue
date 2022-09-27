@@ -1,8 +1,10 @@
 <template>
   <v-app>
     <v-container>
-      <v-app-bar color="primary" dark absolute elevate-on-scroll>
-        <v-toolbar-title>Coding Beauty</v-toolbar-title>
+      <v-app-bar color="primary" dark elevate-on-scroll fixed>
+        <v-toolbar-title>
+          <v-img src="RiverCrane-Vietnam-Logo.png" max-width="120px"></v-img>
+        </v-toolbar-title>
         <v-spacer></v-spacer>
         <v-toolbar-title>{{ userName }}</v-toolbar-title>
         <v-menu left bottom>

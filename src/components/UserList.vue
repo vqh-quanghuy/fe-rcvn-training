@@ -1,10 +1,48 @@
 <template>
     <div>
+        <v-form ref="searchForm">
+            <v-row>
+                <v-col cols="6" sm="6" md="3" >
+                    <v-text-field
+                        v-model="searchItem.user_name"
+                        label="Họ và tên"
+                    ></v-text-field>
+                </v-col>
+                <v-col cols="6" sm="6" md="3" >
+                    <v-text-field
+                        v-model="searchItem.user_email"
+                        label="Email"
+                    ></v-text-field>
+                </v-col>
+                <v-col cols="6" sm="6" md="3" >
+                    <v-select
+                        :items="roles"
+                        item-value="id"
+                        item-text="role_name"
+                        v-model="searchItem.user_group_role"
+                        label="Nhóm"
+                    ></v-select>
+                </v-col>
+                <v-col cols="6" sm="6" md="3" >
+                    <v-select
+                        :items="userStatus"
+                        item-value="id"
+                        item-text="text"
+                        v-model="searchItem.user_status"
+                        label="Trạng thái"
+                    ></v-select>
+                </v-col>
+            </v-row>
+            <v-row class="flex-row-reverse">
+                <v-btn @click="clearSearch()" small color="secondary" class="mr-4">Xóa tìm</v-btn>
+                <v-btn @click="load()" small color="info" class="mr-4">Tìm kiếm</v-btn>
+            </v-row>
+        </v-form>
         <v-data-table
             :headers="headers"
             :items="users.data"
             disable-sort
-            class="elevation-2"
+            class="elevation-2 mt-6"
             hide-default-footer
             disable-pagination
         >
@@ -31,14 +69,26 @@
                         v-bind="attrs"
                         v-on="on"
                     >
-                        Add User
+                        Thêm mới
                     </v-btn>
                     </template>
                     <v-card>
                     <v-card-title>
                         <span class="text-h5">{{ formTitle }}</span>
                     </v-card-title>
-
+                    <v-alert
+                        class="mx-2 error--text"
+                        v-model="alert"
+                        dismissible
+                        color="error"
+                        border="left"
+                        elevation="1"
+                        colored-border
+                        icon="mdi-alert-outline"
+                        @input="closeAlert()"
+                    >
+                        <b>{{alertMesg}}</b>
+                    </v-alert>
                     <v-card-text>
                         <v-container>
                             <v-form ref="editedForm">
@@ -46,7 +96,7 @@
                                     <v-col cols="12" sm="6" md="6">
                                         <v-text-field
                                             v-model="editedItem.name"
-                                            label="Name"
+                                            label="Tên"
                                             validate-on-blur
                                             :rules="nameRules"
                                             :error-messages="editedItemErrors.name"
@@ -70,7 +120,7 @@
                                                 class="input-group--focused"
                                                 @click:append="showPassword = !showPassword"
                                                 v-model="editedItem.password"
-                                                label="Password"
+                                                label="Mật khẩu"
                                                 validate-on-blur
                                                 :rules="passwordRules"
                                                 :error-messages="editedItemErrors.password"
@@ -83,7 +133,7 @@
                                                 class="input-group--focused"
                                                 @click:append="showPasswordConfirm = !showPasswordConfirm"
                                                 v-model="editedItem.password_confirmation"
-                                                label="Password Confirm"
+                                                label="Xác nhận mật khẩu"
                                                 validate-on-blur
                                                 :rules="passwordConfirmRules"
                                                 :error-messages="editedItemErrors.password_confirmation"
@@ -96,7 +146,7 @@
                                             item-value="id"
                                             item-text="role_name"
                                             v-model="editedItem.group_role"
-                                            label="Group Role"
+                                            label="Nhóm"
                                             validate-on-blur
                                             :rules="groupRoleRules"
                                             :error-messages="editedItemErrors.group_role"
@@ -106,7 +156,7 @@
                                         <v-checkbox
                                             v-model="editedItem.is_active"
                                             input-value="true"
-                                            label="Active User"
+                                            label="Trạng thái"
                                             :error-messages="editedItemErrors.is_active"
                                         ></v-checkbox>
                                     </v-col>
@@ -124,17 +174,17 @@
 
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn color="secondary" text @click="close">Cancel</v-btn>
-                        <v-btn color="primary" text @click="save">Save</v-btn>
+                        <v-btn color="secondary" text @click="close">Hủy</v-btn>
+                        <v-btn color="primary" text @click="save">Lưu</v-btn>
                     </v-card-actions>
                     </v-card>
                 </v-dialog>
                 <v-dialog v-model="dialogDelete" max-width="600px">
                     <v-card>
-                    <v-card-title class="text-h5">Are you sure you want to delete this user?</v-card-title>
+                    <v-card-title style="word-break: break-word" class="text-h5">Bạn có muốn xóa thành viên {{itemNameToDelete}} không ?</v-card-title>
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn color="secondary" text @click="closeDelete">Cancel</v-btn>
+                        <v-btn color="secondary" text @click="closeDelete">Hủy bỏ</v-btn>
                         <v-btn color="primary" text @click="deleteItemConfirm">OK</v-btn>
                         <v-spacer></v-spacer>
                     </v-card-actions>
@@ -142,7 +192,7 @@
                 </v-dialog>
                 <v-dialog v-model="dialogDeactivate" max-width="600px">
                     <v-card>
-                    <v-card-title class="text-h5">Are you sure you want to {{ inactiveStatus ? 'deactivate' : 'activate' }} this user?</v-card-title>
+                    <v-card-title style="word-break: break-word" class="text-h5">Bạn có muốn {{ inactiveStatus ? 'khóa' : 'mở khóa' }} thành viên {{itemNameToDeactivate}} không ?</v-card-title>
                     <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-btn color="secondary" text @click="closeDeactivate">Cancel</v-btn>
@@ -174,18 +224,20 @@
             </template>
             <template v-slot:[`item.is_active`]="{ item }">
                 <v-chip v-if="item.is_active === 1" color="green">
-                    <b>Active</b>
+                    <b>Đang hoạt động</b>
                 </v-chip>
                 <v-chip v-else color="red">
-                    <b>In-active</b>
+                    <b>Tạm khóa</b>
                 </v-chip>
             </template>
         </v-data-table>
-        <v-row class="text-center px-4 align-center" wrap>
-            <v-col class="text-truncate" cols="12" md="2">
-                Total {{ users.total }} records
+        <v-row class="text-center pt-4 align-center" wrap>
+            <v-col class="text-truncate" cols="12" md="12">
+                Hiển thị từ {{users.from}} ~ {{users.to}} trên tổng số {{ users.total }} users
             </v-col>
-            <v-col cols="12" md="5">
+        </v-row>
+        <v-row class="text-center px-4 align-center" wrap>
+            <v-col cols="12" md="7">
                 <v-pagination
                     v-model="page"
                     :length="users.last_page">
@@ -197,7 +249,7 @@
                     outlined
                     hide-details
                     :value="itemsPerPage"
-                    label="Items per page"
+                    label="Số lượng hiển thị mỗi trang"
                     @change="itemsPerPage = parseInt($event, 10)"
                     :items="perPageChoices">
                 </v-select>
@@ -205,7 +257,7 @@
             <v-col cols="6" md="2">
                 <v-text-field
                     v-model="page"
-                    label="Go to page"
+                    label="Đi tới trang"
                     type="number"
                     outlined
                     hide-details
@@ -229,20 +281,23 @@ export default {
             dialog: false,
             dialogDelete: false,
             dialogDeactivate: false,
+            alert: false,
+            alertMesg: '',
+            alertType: '',
             headers: [
-                { text: '#', value: 'index'},
-                { text: 'Name', align: 'start', sortable: false, value: 'name'},
-                { text: 'Email', value: 'email' },
-                { text: 'Group Role', value: 'group_role' },
-                { text: 'Status', value: 'is_active', align: 'center' },
-                { text: 'Actions', value: 'actions', align: 'center' },
+                { text: '#', value: 'index', width: '5%'},
+                { text: 'Họ tên', align: 'start', value: 'name', width: '20%'},
+                { text: 'Email', value: 'email', width: '20%' },
+                { text: 'Nhóm', value: 'group_role', width: '20%' },
+                { text: 'Trạng thái', value: 'is_active', align: 'center', width: '20%' },
+                { text: 'Hành động', value: 'actions', align: 'center', width: '20%' },
             ],
             page: 1,
             itemsPerPage: 10,
             perPageChoices: [
-                {text:'5 records/page' , value: 5},
-                {text:'10 records/page' , value: 10},
-                {text:'20 records/page' , value: 20},
+                {text:'5 Users/trang' , value: 5},
+                {text:'10 Users/trang' , value: 10},
+                {text:'20 Users/trang' , value: 20},
             ],
             editedIndex: -1,
             showPassword: false,
@@ -274,31 +329,50 @@ export default {
                 is_active: [],
             },
 
+            searchItem: {
+                user_name: '',
+                user_email: '',
+                user_status: '',
+                user_group_role: '',
+            },
+
+            userStatus: [
+                { id: 0, text: "Tạm khóa" },
+                { id: 1, text: "Đang hoạt động" },
+            ],
+
             inactiveStatus: false,
             itemIdToDeactivate: '', 
+            itemNameToDeactivate: '',
             itemIdToDelete: '', 
+            itemNameToDelete: '', 
 
             // Validation rule
             nameRules: [
-                v => !!v || 'Name is required.',
-                v => (v && v.length <= 255) || 'Name must be less than 255 characters.',
+                v => !!v || 'Vui lòng nhập tên người sử dụng.',
+                v => (v && v.length <= 255) || 'Tên phải ít hơn 255 ký tự.',
+                v => (v && v.length >= 5) || 'Tên phải lớn hơn 5 ký tự.',
             ],
             emailRules: [
-                v => !!v || 'Email is required.',
-                v => (v && v.length <= 255) || 'Email must be less than 255 characters.',
-                v => /^(([^<>()[\]\\.,;:\s@']+(\.[^<>()\\[\]\\.,;:\s@']+)*)|('.+'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(v) || 'E-mail must be valid.',
+                v => !!v || 'Email không được để trống.',
+                v => (v && v.length <= 255) || 'Email phải ít hơn 255 ký tự.',
+                v => /^(([^<>()[\]\\.,;:\s@']+(\.[^<>()\\[\]\\.,;:\s@']+)*)|('.+'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(v) || 'Email không đúng định dạng.',
             ], 
             passwordRules: [
-                v => !!v || 'Password is required.',
-                v => (v && v.length >= 8) || 'Password must be more than 8 characters.',
+                v => !!v || 'Mật khẩu không được để trống.',
+                v => (v && v.length >= 8) || 'Mật khẩu phải lớn hơn 8 ký tự.',
+                v => (v && /\d/.test(v)) || 'Mật khẩu phải có ít nhất 1 ký tự số.',
+                v => (v && /[A-Z]{1}/.test(v)) || 'Mật khẩu phải có ít nhất 1 ký tự in hoa.',
+                v => (v && /[a-z]{1}/.test(v)) || 'Mật khẩu phải có ít nhất 1 ký tự in thường.',
+                v => (v && /[^A-Za-z0-9]/.test(v)) || 'Mật khẩu phải có ít nhất 1 ký tự đặc biệt.',
             ],
             passwordConfirmRules: [
-                v => !!v || 'Password Confirm is required',
-                v => (v && v.length >= 8) || 'Password must be more than 8 characters.',
-                v => v === this.editedItem.password || 'Password confirm must be match.',
+                v => !!v || 'Xác nhận mật khẩu không được để trống.',
+                v => (v && v.length >= 8) || 'Xác nhận mật khẩu phải lớn hơn 8 ký tự.',
+                v => v === this.editedItem.password || 'Mật khẩu và xác nhận mật khẩu không chính xác.',
             ],
             groupRoleRules: [
-                v => !!v || 'Group role must be selected.',
+                v => !!v || 'Nhóm phải được chọn.',
             ],
 
             apiHeaders: {
@@ -309,13 +383,17 @@ export default {
         }
     },
     methods: {
-        async load(page, itemsPerPage) {
+        async load(page = 1, itemsPerPage = 10) {
             await this.$axios
             .get(`${this.$backendUrl}user/users/`, {
                 headers: this.apiHeaders,
                 params: {
                     page: page,
-                    per_page: itemsPerPage
+                    per_page: itemsPerPage,
+                    name: this.searchItem.user_name,
+                    email: this.searchItem.user_email,
+                    user_status: this.searchItem.user_status,
+                    user_group_role: this.searchItem.user_group_role,
                 }
             })
             .then(res => {
@@ -329,6 +407,12 @@ export default {
                 if (err.status !== 200) console.error(err.response.data.message);
             })
         },
+
+        clearSearch() {
+            this.$refs.searchForm.reset();
+            this.load();
+        },
+
         editItem (item) {
             this.editedIndex = 1;
             item.group_role = parseInt(item.group_role);
@@ -338,6 +422,7 @@ export default {
 
         deleteItem (item) {
             this.itemIdToDelete = item.id;
+            this.itemNameToDelete = item.name
             this.dialogDelete = true;
         },
 
@@ -360,16 +445,22 @@ export default {
         close () {
             this.editedItemErrors = {};
             this.$refs.editedForm.reset();
+            this.editedIndex = -1;
+            this.alert = false;
+            this.alertMesg = '';
+            this.alertType = '';
             this.dialog = false;
         },
 
         closeDelete () {
             this.dialogDelete = false;
             this.itemIdToDelete = '';
+            this.itemNameToDelete = '';
         },
 
         deactivateUser(item) {
             this.itemIdToDeactivate = item.id;
+            this.itemNameToDeactivate = item.name;
             this.dialogDeactivate = true;
             if(item.is_active === 1) this.inactiveStatus = true;
         },
@@ -393,6 +484,7 @@ export default {
         closeDeactivate () {
             this.dialogDeactivate = false;
             this.itemIdToDeactivate = '';
+            this.itemNameToDeactivate = '';
             this.inactiveStatus = false;
         },
 
@@ -412,13 +504,18 @@ export default {
                     headers: this.apiHeaders
                 })
                 .then(res => {
+                    // this.alertMesg = res.data.message;
+                    // this.alert = true;
+                    // this.alertType = 'success';
                     alert(res.data.message);
                     this.load(this.page, this.itemsPerPage);
                     this.close();
                 })
                 .catch(err => {
                     this.editedItemErrors = err.response.data.error;
-                    alert(err.response.data.message);
+                    this.alertMesg = err.response.data.message;
+                    this.alert = true;
+                    this.alertType = 'error';
                 })
             } else {
                 // Call to Create axios
@@ -434,13 +531,18 @@ export default {
                     headers: this.apiHeaders
                 })
                 .then(res => {
+                    // this.alertMesg = res.data.message;
+                    // this.alert = true;
+                    // this.alertType = 'success';
                     alert(res.data.message);
                     this.load(this.page, this.itemsPerPage);
                     this.close();
                 })
                 .catch(err => {
                     this.editedItemErrors = err.response.data.error;
-                    alert(err.response.data.message);
+                    this.alertMesg = err.response.data.message;
+                    this.alert = true;
+                    this.alertType = 'error';
                 })
             }
         },
@@ -449,11 +551,16 @@ export default {
         },
         clearEmailErrors() {
             this.editedItemErrors.email = [];
+        },
+        closeAlert() {
+            this.alert = false;
+            this.alertMesg = '';
+            this.alertType = '';
         }
     },
     computed: {
         formTitle () {
-            return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
+            return this.editedIndex === -1 ? 'Thêm User' : 'Chỉnh sửa User'
         },
     },
 
